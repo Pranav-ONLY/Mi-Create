@@ -78,6 +78,7 @@ class CoreDialog(QDialog):
     def translate(self):
         self.welcomeSidebarNewProject.setText(QCoreApplication.translate("", "New Project"))
         self.welcomeSidebarOpenProject.setText(QCoreApplication.translate("", "Open Project"))
+        self.welcomeSidebarConvert.setText("Band 8 pro -> RBP")
         self.newProjectSidebarTitle.setText(QCoreApplication.translate("", "New Project"))
         self.welcomeSidebarSettings.setText(QCoreApplication.translate("", "Settings"))
         self.watchfaceCategory.setText(QCoreApplication.translate("", "Watchface"))
@@ -145,6 +146,10 @@ class CoreDialog(QDialog):
         self.welcomeSidebarOpenProject = QPushButton(self.welcomeSidebar)
         self.welcomeSidebarOpenProject.setIcon(QIcon().fromTheme("document-open"))
 
+        self.welcomeSidebarConvert = QPushButton(self.welcomeSidebar)
+        self.welcomeSidebarConvert.setIcon(QIcon().fromTheme("document-convert"))  # Choose an appropriate icon
+        # self.welcomeSidebarConvert.setText("Convert")
+
         self.welcomeSidebarSettings = QToolButton(self.welcomeSidebar)
         self.welcomeSidebarSettings.setIcon(QIcon().fromTheme("preferences-desktop"))
 
@@ -155,6 +160,7 @@ class CoreDialog(QDialog):
         self.welcomeSidebarLayout.addWidget(self.welcomeSidebarLine)
         self.welcomeSidebarLayout.addWidget(self.welcomeSidebarNewProject)
         self.welcomeSidebarLayout.addWidget(self.welcomeSidebarOpenProject)
+        self.welcomeSidebarLayout.addWidget(self.welcomeSidebarConvert)
         self.welcomeSidebarLayout.addStretch()
         self.welcomeSidebarLayout.addWidget(self.welcomeSidebarSettings)
 

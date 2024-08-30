@@ -326,22 +326,20 @@ class Canvas(QGraphicsView):
         widget.snap = snap
 
         # Add images
-
+        
         bgImg = QPixmap()
-        if backgroundImage is not None:        # check if there is a background image exist
-          bgImg.load(os.path.join(self.imageFolder, backgroundImage))
+        if backgroundImage is not None:
+            bgImg.load(os.path.join(self.imageFolder, backgroundImage))
 
         hrImg = QPixmap()
-        if hourHandImage is not None:
-          hrImg.load(os.path.join(self.imageFolder, hourHandImage))
+        hrImg.load(os.path.join(self.imageFolder, hourHandImage))
 
         minImg = QPixmap()
-        if minuteHandImage is not None:
-          minImg.load(os.path.join(self.imageFolder, minuteHandImage))
+        minImg.load(os.path.join(self.imageFolder, minuteHandImage))
         
         secImg = QPixmap()
-        if secondHandImage is not None:        # check if there is a second hand image exist some AOD does not have this
-          secImg.load(os.path.join(self.imageFolder, secondHandImage))
+        if secondHandImage is not None:
+            secImg.load(os.path.join(self.imageFolder, secondHandImage))
 
         widget.addBackground(bgImg, itemAnchors["background"]["x"], itemAnchors["background"]["y"], interpolationStyle)
         widget.addHourHand(hrImg, itemAnchors["hour"]["x"], itemAnchors["hour"]["y"], interpolationStyle)
@@ -397,7 +395,8 @@ class Canvas(QGraphicsView):
         widget.setZValue(zValue)
         widget.setData(1, "widget_imagelist") # Item ID
         widget.snap = snap
-
+        if int(digits) > 6:
+            digits = 6
         for x in range(int(digits)):
             # Get QPixmap from file string
             if len(numList) >= 11:
@@ -412,8 +411,7 @@ class Canvas(QGraphicsView):
 
     def createProgressArc(self, name, rect, zValue, backgroundImage, arcImage, arcX, arcY, radius, lineWidth, startAngle, endAngle, isFlat, snap, interpolationStyle):
         bgImage = QPixmap()
-        if backgroundImage is not None:
-          bgImage.load(os.path.join(self.imageFolder, backgroundImage))
+        bgImage.load(os.path.join(self.imageFolder, backgroundImage))
     
         fgImage = QPixmap()
         fgImage.load(os.path.join(self.imageFolder, arcImage))

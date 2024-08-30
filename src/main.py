@@ -4,6 +4,10 @@
 # TODO
 # Put documentation on code, its a wasteland out there
 # In-line AOD editing (through a toggle)
+#here we go
+from PIL import Image
+import xml.etree.ElementTree as ET
+
 
 import logging
 import traceback
@@ -807,6 +811,7 @@ class MainWindow(QMainWindow):
         self.coreDialog = CoreDialog(None, self.settingsWidget, f"{programVersion} • compiler {self.WatchData.getCompilerVersion()}",
                                      self.WatchData.models)
         self.coreDialog.welcomeSidebarOpenProject.clicked.connect(self.openProject)
+        self.coreDialog.welcomeSidebarConvert.clicked.connect(self.convertProject)
         self.coreDialog.reloadSettings.connect(lambda: self.settingsWidget.loadProperties(self.settings))
         self.coreDialog.updateCompiler.connect(lambda compiler, db: self.WatchData.updateDataFiles(compiler, db))
         self.coreDialog.resetSettings.connect(resetSettings)
@@ -1258,6 +1263,7 @@ class MainWindow(QMainWindow):
         # file
         self.ui.actionNewFile.triggered.connect(self.showNewProjectDialog)
         self.ui.actionManage_Project.triggered.connect(self.showManageProjectDialog)
+        self.ui.actionConvertFile.triggered.connect(self.convertProject)
         self.ui.actionClose_Project.triggered.connect(lambda: self.closeTab(self.ui.workspace.currentIndex()))
         self.ui.actionOpenFile.triggered.connect(self.openProject)
         self.ui.actionSave.triggered.connect(lambda: self.saveProjects("current"))
@@ -1322,6 +1328,105 @@ class MainWindow(QMainWindow):
     def showNewProjectDialog(self):
         self.coreDialog.showNewProjectPage()
         self.coreDialog.exec()
+    
+
+    def resizeImage(self, projectPath, imagePath, newWidth, newHeight):
+        fullPath = os.path.join(os.path.dirname(projectPath), f"images/{imagePath}")
+        if os.path.exists(fullPath):
+            with Image.open(fullPath) as img:
+                resized_img = img.resize((newWidth, newHeight), Image.LANCZOS)
+                resized_img.save(fullPath)
+
+    def convertProjectData(self, project):
+        # Update DeviceType
+        project.data['FaceProject']['@DeviceType'] = '8'
+        self.resizeImage(project.dataPath, project.data['FaceProject']['Screen']['@Bitmap'], 110, 208)
+        
+        # Process each Widget
+        widgets = project.data['FaceProject']['Screen']['Widget']
+        if not isinstance(widgets, list):
+            widgets = [widgets]  # Ensure widgets is a list
+        
+        for widget in widgets:
+            # Update X and Y coordinates
+            widget['@X'] = str(int(float(widget['@X']) * 0.5774))
+            widget['@Y'] = str(int(float(widget['@Y']) * 0.7664))
+
+                        
+            # Update Width and Height
+            if '@Digits' in widget and (int(widget['@Digits'])>1) and (int(widget['@Width']) > int(widget['@Height'])):
+                widget['@Width'] = str(int(float(float(widget['@Width'])/int(widget['@Digits'])) * 0.5774))
+            else:
+                widget['@Width'] = str(int(float(widget['@Width']) * 0.5774))
+
+            # widget['@Width'] = str(int(float(widget['@Width']) * 0.5774))
+            widget['@Height'] = str(int(float(widget['@Height']) * 0.7667))
+            
+            # Resize images
+            if '@Bitmap' in widget:
+                self.resizeImage(project.dataPath, widget['@Bitmap'], int(widget['@Width']), int(widget['@Height']))
+
+            elif '@BitmapList' in widget:
+                for bitmap in widget['@BitmapList'].split('|'):
+                    self.resizeImage(project.dataPath, bitmap.split(':')[1] if ':' in bitmap else bitmap, int(widget['@Width']), int(widget['@Height']))
+
+                    
+            elif '@HourHand_ImageName' in widget:
+                # int(194 * ((widget['@HourImage_rotate_xc']*2)/(widget['@HourImage_rotate_yc']*2)))
+                self.resizeImage(project.dataPath, widget['@HourHand_ImageName'], int(194 * ((float(widget['@HourImage_rotate_xc'])*2)/(float(widget['@HourImage_rotate_yc'])*2))), int(widget['@Width']))
+                self.resizeImage(project.dataPath, widget['@MinuteHand_Image'], int(194 * ((float(widget['@MinuteImage_rotate_xc'])*2)/(float(widget['@MinuteImage_rotate_yc'])*2))), int(widget['@Width']))
+
+                widget['@HourImage_rotate_xc'] = int(int(194 * ((float(widget['@HourImage_rotate_xc'])*2)/(float(widget['@HourImage_rotate_yc'])*2)))/2)
+                widget['@HourImage_rotate_yc'] = int(int(widget['@Width'])/2)
+
+            if '@MinuteHand_Image' in widget:
+                widget['@MinuteImage_rotate_xc'] = int(int(194 * ((float(widget['@MinuteImage_rotate_xc'])*2)/(float(widget['@MinuteImage_rotate_yc'])*2)))/2)
+                widget['@MinuteImage_rotate_yc'] = int(int(widget['@Width'])/2)
+
+            if '@SecondHand_Image' in widget:
+                self.resizeImage(project.dataPath, widget['@SecondHand_Image'], int(194 * ((float(widget['@SecondImage_rotate_xc'])*2)/(float(widget['@SecondImage_rotate_yc'])*2))), int(widget['@Width']))
+                widget['@SecondImage_rotate_xc'] = int(int(194 * ((float(widget['@SecondImage_rotate_xc'])*2)/(float(widget['@SecondImage_rotate_yc'])*2)))/2)
+                widget['@SecondImage_rotate_yc'] = int(int(widget['@Width'])/2)
+
+
+    def convertProject(self, event=None, projectLocation=None):
+        # Get where to open the project from
+        if projectLocation is None:
+            projectLocation, _ = QFileDialog.getOpenFileName(self, 'Select Project to Convert...', "%userprofile%/", "Fprj Files (*.fprj)")
+
+        if not projectLocation:
+            return False  # No file was selected
+
+        project = FprjProject()
+        load = project.fromExisting(projectLocation)
+        self.convertProjectData(project)
+        if load[0]:
+            try:
+                self.createNewWorkspace(project)
+                settings = QSettings("Mi Create", "Workspace")
+                recentProjectList = settings.value("recentProjects")
+
+                if recentProjectList == None:
+                    recentProjectList = []
+
+                path = os.path.normpath(projectLocation)
+                projectListing = [os.path.basename(path), path]
+                print(path)
+
+                if projectListing in recentProjectList:
+                    recentProjectList.pop(recentProjectList.index(projectListing))
+
+                recentProjectList.append(projectListing)
+
+                settings.setValue("recentProjects", recentProjectList)
+            except Exception as e:
+                self.showDialog("error", _("Failed to open project: ") + str(e), traceback.format_exc())
+                return False
+        else:
+            self.showDialog("error", _('Cannot open project: ') + load[1], load[2])
+            return False        
+        
+        return True
 
     def newProject(self, file, projectName, watchModel):
         # Check if file was selected
@@ -1516,8 +1621,8 @@ class MainWindow(QMainWindow):
         self.statusBar().addPermanentWidget(progressBar, 1)
 
         compileDirectory = os.path.join(os.path.dirname(currentProject["project"].dataPath), "output")
-        if not os.path.exists(compileDirectory): # if output folder does not exist
-            os.makedirs(compileDirectory)        # create new output folder
+        if not os.path.exists(compileDirectory):
+            os.makedirs(compileDirectory)
         output = []
 
         process = currentProject["project"].compile(currentProject["project"].dataPath, compileDirectory,

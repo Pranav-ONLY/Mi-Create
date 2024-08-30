@@ -203,6 +203,12 @@ class Ui_MainWindow(object):
         icon = QtGui.QIcon.fromTheme("document-open")
         self.actionOpenFile.setIcon(icon)
         self.actionOpenFile.setObjectName("actionOpenFile")
+
+        self.actionConvertFile = QtGui.QAction(parent=MainWindow)
+        icon = QtGui.QIcon.fromTheme("document-new")
+        self.actionConvertFile.setIcon(icon)
+        self.actionConvertFile.setObjectName("actionConvertFile")
+
         self.actionUndo = QtGui.QAction(parent=MainWindow)
         icon = QtGui.QIcon.fromTheme("edit-undo")
         self.actionUndo.setIcon(icon)
@@ -310,6 +316,7 @@ class Ui_MainWindow(object):
         self.actionClose_Project.setObjectName("actionClose_Project")
         self.menuFile.addAction(self.actionNewFile)
         self.menuFile.addAction(self.actionOpenFile)
+        self.menuFile.addAction(self.actionConvertFile)
         self.menuFile.addSeparator()
         self.menuFile.addAction(self.actionSave)
         self.menuFile.addSeparator()
@@ -424,6 +431,8 @@ class Ui_MainWindow(object):
         self.actionOpenFile.setText(_translate("MainWindow", "Open..."))
         self.actionOpenFile.setToolTip(_translate("MainWindow", "Open File"))
         self.actionOpenFile.setShortcut(_translate("MainWindow", "Ctrl+O"))
+        self.actionConvertFile.setText(_translate("MainWindow", "Convert MB8P to RBP"))
+
         self.actionUndo.setText(_translate("MainWindow", "Undo"))
         self.actionUndo.setShortcut(_translate("MainWindow", "Ctrl+Z"))
         self.actionRedo.setText(_translate("MainWindow", "Redo"))
