@@ -332,10 +332,12 @@ class Canvas(QGraphicsView):
             bgImg.load(os.path.join(self.imageFolder, backgroundImage))
 
         hrImg = QPixmap()
-        hrImg.load(os.path.join(self.imageFolder, hourHandImage))
+        if hourHandImage is not None:
+            hrImg.load(os.path.join(self.imageFolder, hourHandImage))
 
         minImg = QPixmap()
-        minImg.load(os.path.join(self.imageFolder, minuteHandImage))
+        if minuteHandImage is not None:
+            minImg.load(os.path.join(self.imageFolder, minuteHandImage))
         
         secImg = QPixmap()
         if secondHandImage is not None:
@@ -411,7 +413,8 @@ class Canvas(QGraphicsView):
 
     def createProgressArc(self, name, rect, zValue, backgroundImage, arcImage, arcX, arcY, radius, lineWidth, startAngle, endAngle, isFlat, snap, interpolationStyle):
         bgImage = QPixmap()
-        bgImage.load(os.path.join(self.imageFolder, backgroundImage))
+        if backgroundImage is not None:
+            bgImage.load(os.path.join(self.imageFolder, backgroundImage))
     
         fgImage = QPixmap()
         fgImage.load(os.path.join(self.imageFolder, arcImage))
