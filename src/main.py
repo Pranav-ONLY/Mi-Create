@@ -6,7 +6,7 @@
 # In-line AOD editing (through a toggle)
 #here we go
 from PIL import Image
-import xml.etree.ElementTree as ET
+
 
 
 import logging
@@ -1355,7 +1355,21 @@ class MainWindow(QMainWindow):
                         
             # Update Width and Height
             if '@Digits' in widget and (int(widget['@Digits'])>1) and (int(widget['@Width']) > int(widget['@Height'])):
-                widget['@Width'] = str(int(float(float(widget['@Width'])/int(widget['@Digits'])) * 0.5774))
+                #widget['@Width'] = str(int(float(float(widget['@Width'])/int(widget['@Digits'])) * 0.5774))
+                try:
+                    firstImagePath = widget['@BitmapList'].split('|')[0]
+                    mainPath = os.path.join(os.path.dirname(project.dataPath), f"images/{firstImagePath}")
+                    if os.path.exists(mainPath):
+                        with Image.open(mainPath) as img:
+                            if img.width == int(widget['@Width']):
+                                widget['@Width'] = str(int(float(widget['@Width']) * 0.5774))
+                            elif img.width == int(float(widget['@Width']) * 0.5774):
+                                # widget['@Width'] = int(float(widget['@Width'])/int(widget['@Digits']))
+                                widget['@Width'] = str(int(float(widget['@Width']) * 0.5774))
+                            else:
+                                widget['@Width'] = str(int(float(float(widget['@Width'])/int(widget['@Digits'])) * 0.5774))
+                except FileNotFoundError:
+                    print(f"Image not found: {firstImagePath}")
             else:
                 widget['@Width'] = str(int(float(widget['@Width']) * 0.5774))
 
@@ -1368,24 +1382,26 @@ class MainWindow(QMainWindow):
 
             elif '@BitmapList' in widget:
                 for bitmap in widget['@BitmapList'].split('|'):
+                    if bitmap == "":
+                        break
                     self.resizeImage(project.dataPath, bitmap.split(':')[1] if ':' in bitmap else bitmap, int(widget['@Width']), int(widget['@Height']))
 
                     
             elif '@HourHand_ImageName' in widget:
                 # int(194 * ((widget['@HourImage_rotate_xc']*2)/(widget['@HourImage_rotate_yc']*2)))
-                self.resizeImage(project.dataPath, widget['@HourHand_ImageName'], int(194 * ((float(widget['@HourImage_rotate_xc'])*2)/(float(widget['@HourImage_rotate_yc'])*2))), int(widget['@Width']))
-                self.resizeImage(project.dataPath, widget['@MinuteHand_Image'], int(194 * ((float(widget['@MinuteImage_rotate_xc'])*2)/(float(widget['@MinuteImage_rotate_yc'])*2))), int(widget['@Width']))
+                self.resizeImage(project.dataPath, widget['@HourHand_ImageName'], int(int(widget['@Width']) * ((float(widget['@HourImage_rotate_xc'])*2)/(float(widget['@HourImage_rotate_yc'])*2))), int(widget['@Width']))
+                self.resizeImage(project.dataPath, widget['@MinuteHand_Image'], int(int(widget['@Width']) * ((float(widget['@MinuteImage_rotate_xc'])*2)/(float(widget['@MinuteImage_rotate_yc'])*2))), int(widget['@Width']))
 
-                widget['@HourImage_rotate_xc'] = int(int(194 * ((float(widget['@HourImage_rotate_xc'])*2)/(float(widget['@HourImage_rotate_yc'])*2)))/2)
+                widget['@HourImage_rotate_xc'] = int(int(int(widget['@Width']) * ((float(widget['@HourImage_rotate_xc'])*2)/(float(widget['@HourImage_rotate_yc'])*2)))/2)
                 widget['@HourImage_rotate_yc'] = int(int(widget['@Width'])/2)
 
             if '@MinuteHand_Image' in widget:
-                widget['@MinuteImage_rotate_xc'] = int(int(194 * ((float(widget['@MinuteImage_rotate_xc'])*2)/(float(widget['@MinuteImage_rotate_yc'])*2)))/2)
+                widget['@MinuteImage_rotate_xc'] = int(int(int(widget['@Width']) * ((float(widget['@MinuteImage_rotate_xc'])*2)/(float(widget['@MinuteImage_rotate_yc'])*2)))/2)
                 widget['@MinuteImage_rotate_yc'] = int(int(widget['@Width'])/2)
 
             if '@SecondHand_Image' in widget:
-                self.resizeImage(project.dataPath, widget['@SecondHand_Image'], int(194 * ((float(widget['@SecondImage_rotate_xc'])*2)/(float(widget['@SecondImage_rotate_yc'])*2))), int(widget['@Width']))
-                widget['@SecondImage_rotate_xc'] = int(int(194 * ((float(widget['@SecondImage_rotate_xc'])*2)/(float(widget['@SecondImage_rotate_yc'])*2)))/2)
+                self.resizeImage(project.dataPath, widget['@SecondHand_Image'], int(int(widget['@Width']) * ((float(widget['@SecondImage_rotate_xc'])*2)/(float(widget['@SecondImage_rotate_yc'])*2))), int(widget['@Width']))
+                widget['@SecondImage_rotate_xc'] = int(int(int(widget['@Width']) * ((float(widget['@SecondImage_rotate_xc'])*2)/(float(widget['@SecondImage_rotate_yc'])*2)))/2)
                 widget['@SecondImage_rotate_yc'] = int(int(widget['@Width'])/2)
 
 
