@@ -41,7 +41,7 @@ class PluginLoader:
 
                 config_path = os.path.join(plugin_folder, "config.ini")
                 config = ConfigParser()
-                config.read_file(open(os.path.join(config_path)))
+                config.read_file(open(os.path.join(config_path), encoding="utf-8"))
                 
                 plugin_name = config.get("config", "name")
                 plugin_path = os.path.join(plugin_folder, config.get("config", "script"))
