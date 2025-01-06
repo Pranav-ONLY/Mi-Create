@@ -16,7 +16,7 @@ from PyQt6.QtCore import Qt, QObject, QSize, pyqtSignal, QUrl, QMetaMethod
 from PyQt6.QtGui import QIcon, QPixmap, QMovie
 from PyQt6.QtWidgets import (QDialog, QLabel, QLineEdit, QComboBox, QToolButton, QSpinBox, QVBoxLayout, 
                              QHBoxLayout, QSizePolicy, QWidget, QDialogButtonBox, QFileDialog, QFrame,
-                             QPushButton, QCheckBox, QListWidget, QListWidgetItem, QMenu)
+                             QPushButton, QCheckBox, QListWidget, QListWidgetItem, QMenu, QProgressBar)
 from PyQt6.QtMultimedia import QSoundEffect
 from widgets.stackedWidget import QStackedWidget, loadJsonStyle
 
@@ -193,6 +193,63 @@ class CoreDialog(QDialog):
         self.welcomeSidebarLayout.addWidget(self.welcomeSidebarLine)
         self.welcomeSidebarLayout.addWidget(self.welcomeSidebarNewProject)
         self.welcomeSidebarLayout.addWidget(self.welcomeSidebarOpenProject)
+
+
+        # Conversion Selection menu
+        self.models = {
+                        "Mi Color2/S1/S2": ((466, 466), (246,246), 3, 233),
+                        "Mi Watch S1 pro": ((480, 480), (280, 280), 4, 240),
+                        "Redmi Watch 3": ((390, 450), (234, 270), 7, 86),
+                        "Redmi Watch 3 Active": ((240, 280), (156, 182), 12, 55),
+                        "Redmi Watch 5 Active":((320, 385), (320, 385), 3651, 82),
+                        "Redmi Watch 5 Lite":((410, 502), (410, 502), 3652, 116),
+                        "Redmi band pro": ((194, 368), (110, 208), 8, 28),
+                        "Mi band 8": ((192, 490), (122, 310), 9, 280),
+                        "Mi band 9": ((192, 490), (122, 310), 366, 280),
+                        "Mi band 9 pro": ((336, 480), (230, 328), 367, 48),
+                        "Mi band 8 pro": ((336, 480), (230, 328), 11, 48),
+                        "Mi band 7 pro": ((280, 456), (220, 358), 6, 48),
+                        "Mi watch S3": ((466, 466), (326, 326), 362, 233),
+                        "Mi watch S4": ((466, 466), (326, 326), 462, 233),
+                        "Redmi Watch 4": ((390, 450), (234, 270), 365, 90),
+                        "Redmi Watch 5": ((432, 514), (432, 514), 465, 103)
+                        }
+        # for separating from main buttons
+        self.headLabel = QLabel("Convert :", self.welcomeSidebar)
+        self.headLabel.setAlignment(Qt.AlignmentFlag.AlignLeft)
+        self.welcomeSidebarLayout.addWidget(self.headLabel)
+
+        # for first drop down
+        self.fromModelComboBox = QComboBox(self.welcomeSidebar)
+        self.fromModelComboBox.addItems(self.models.keys())
+        self.fromModelComboBox.setToolTip("Select the model you want to convert FROM")
+        self.welcomeSidebarLayout.addWidget(self.fromModelComboBox)
+
+        # for downward arrow
+        self.arrowLabel = QLabel("To ↓", self.welcomeSidebar)
+        self.arrowLabel.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.welcomeSidebarLayout.addWidget(self.arrowLabel)
+
+        # for second drop down
+        self.toModelComboBox = QComboBox(self.welcomeSidebar)
+        self.toModelComboBox.addItems(self.models.keys())
+        self.toModelComboBox.setToolTip("Select the model you want to convert TO")
+        self.welcomeSidebarLayout.addWidget(self.toModelComboBox)
+
+        # Set default selections
+        self.fromModelComboBox.setCurrentIndex(0)
+        self.toModelComboBox.setCurrentIndex(1)
+
+        # convert Button
+        self.convertButton = QPushButton("Convert", self.welcomeSidebar)
+        self.convertButton.setIcon(QIcon().fromTheme("document-convert"))
+        self.convertButton.setToolTip("Click to start the conversion")
+        self.welcomeSidebarLayout.addWidget(self.convertButton)
+        # small ProgressBar
+        self.progressBar = QProgressBar(self.welcomeSidebar)
+        self.progressBar.setMaximum(100)
+        self.welcomeSidebarLayout.layout().addWidget(self.progressBar)
+
         self.welcomeSidebarLayout.addStretch()
         self.welcomeSidebarLayout.addWidget(self.welcomeSidebarSettings)
 
@@ -212,6 +269,13 @@ class CoreDialog(QDialog):
         # setup interactive things
         self.welcomeSidebarNewProject.clicked.connect(lambda: self.showNewProjectPage(self.showWelcomePage, True))
         self.welcomeSidebarSettings.clicked.connect(lambda: self.showSettingsPage(self.showWelcomePage, True))
+    
+        # for updating the second dropdown for no duplicate selection
+        self.fromModelComboBox.currentIndexChanged.connect(self.updateToModelOptions)
+    def updateToModelOptions(self):
+        selected_model = self.fromModelComboBox.currentText()
+        self.toModelComboBox.clear()
+        self.toModelComboBox.addItems([model for model in self.models if model != selected_model])
 
     def setupNewProjectPage(self, deviceList):
         # sidebar

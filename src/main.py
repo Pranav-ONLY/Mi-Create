@@ -51,6 +51,7 @@ import threading
 import json
 import traceback
 
+from utils.converts import Convert
 from utils.project import WatchData, XiaomiProject, FprjProject, GMFProject
 from utils.dialog import CoreDialog, MultiFieldDialog
 from utils.theme import Theme
@@ -830,6 +831,7 @@ class WatchfaceEditor(QMainWindow):
         self.coreDialog.resetSettings.connect(resetSettings)
         self.coreDialog.projectConfigSaved.connect(saveConfig)
         self.coreDialog.rejected.connect(closeEvent)
+        self.coreDialog.convertButton.clicked.connect(self.conversion)
 
         deviceField = self.coreDialog.watchfacePageDeviceField
         nameField = self.coreDialog.watchfacePageProjectField
@@ -1183,7 +1185,7 @@ class WatchfaceEditor(QMainWindow):
         # Setup Project
         self.projectXML = xml
         self.Explorer.clear()
-
+        print(project.getDeviceType())
         # Create a Canvas (QGraphicsScene & QGraphicsView)
         canvas = Canvas(project.getDeviceType(), self.settings["Canvas"]["Antialiasing"]["value"],
                         self.settings["Canvas"]["ClipDeviceShape"]["value"], self.ui, self)
@@ -1422,6 +1424,55 @@ class WatchfaceEditor(QMainWindow):
         else:
             self.showDialog("error", _('Cannot open project: ') + load[1], load[2])
             return False
+    
+    def conversion(self, event=None, projectLocation=None):
+        # Get where to open the project from
+        if projectLocation == None:
+            projectLocation = QFileDialog.getOpenFileName(self, _('Open Project...'), "%userprofile%/")
+
+        if not isinstance(projectLocation, str):
+            projectLocation = projectLocation[0].replace("\\", "/")
+
+        if os.path.isfile(projectLocation):
+            extension = os.path.splitext(projectLocation)[1]
+            if extension == '.fprj':
+                project = FprjProject()
+            elif extension == ".json":
+                project = GMFProject()
+            else:
+                self.showDialog("error", "Invalid project!")
+                return False
+        else:
+            # no file was selected
+            return False
+
+        load = project.fromExisting(projectLocation)
+        converter = Convert(self.coreDialog)
+        converter.projectDataConversion(project)
+        if load[0]:
+            try:
+                self.createNewWorkspace(project)
+                recentProjectList = storedSettings.value("recentProjects")
+
+                if recentProjectList == None:
+                    recentProjectList = []
+
+                path = os.path.normpath(projectLocation)
+                projectListing = [os.path.basename(path), path]
+
+                if projectListing in recentProjectList:
+                    recentProjectList.pop(recentProjectList.index(projectListing))
+
+                recentProjectList.append(projectListing)
+
+                storedSettings.setValue("recentProjects", recentProjectList)
+            except Exception as e:
+                self.showDialog("error", _("Failed to open project: ") + str(e), traceback.format_exc())
+                return False
+        else:
+            self.showDialog("error", _('Cannot open project: ') + load[1], load[2])
+            return False
+        self.coreDialog.progressBar.setValue(0)
 
     def showManageProjectDialog(self):
         currentProject: FprjProject = self.getCurrentProject()["project"]
@@ -1538,6 +1589,8 @@ class WatchfaceEditor(QMainWindow):
         self.statusBar().addPermanentWidget(progressBar, 1)
 
         compileDirectory = os.path.join(os.path.dirname(currentProject["project"].dataPath), "output")
+        if not os.path.exists(compileDirectory):
+            os.makedirs(compileDirectory)
         output = []
 
         process = currentProject["project"].compile(currentProject["project"].dataPath, compileDirectory,

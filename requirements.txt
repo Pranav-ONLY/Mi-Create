@@ -4,4 +4,10 @@ qt6-applications
 xmltodict
 requests
 
+pillow
+torch
+opencv-python
+torchvision
+basicsr
+
 pywin32; sys_platform == "win32"

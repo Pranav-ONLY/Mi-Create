@@ -59,6 +59,11 @@ class WatchData:
             "362": "xiaomi_watch_s3",
             "365": "redmi_watch_4",
             "366": "xiaomi_band_9",
+            "367": "Mi_band_9_pro",
+            "3651": "Redmi_Watch_5_Active",
+            "3652": "Redmi_Watch_5",
+            "465": "Redmi_Watch_5_Lite",
+            "462": "Mi_watch_S4",
         }
         self.deviceId = [
             "xiaomi_color",
@@ -76,7 +81,12 @@ class WatchData:
             "redmi_watch_3_active",
             "xiaomi_watch_s3",
             "redmi_watch_4",
-            "xiaomi_band_9"
+            "xiaomi_band_9",
+            "Redmi_Watch_5_Active",
+            "Redmi_Watch_5",
+            "Redmi_Watch_5_Lite",
+            "Mi_watch_S4",
+            "Mi_band_9_pro",
         ]
         self.widgetId = [
             "widget"
@@ -326,6 +336,11 @@ class FprjProject:
             "362": "xiaomi_watch_s3",
             "365": "redmi_watch_4",
             "366": "xiaomi_band_9",
+            "367": "Mi_band_9_pro",
+            "3651": "Redmi_Watch_5_Active",
+            "3652": "Redmi_Watch_5",
+            "465": "Redmi_Watch_5_Lite",
+            "462": "Mi_watch_S4",
         }
 
         self.widgetIds = {
@@ -665,7 +680,7 @@ class FprjProject:
         logging.info("Compiling project "+path)
         process = QProcess()
         process.setProgram(compilerLocation)
-        process.setArguments(["compile", path, location, str.split(os.path.basename(path), ".")[0]+".face", "0"])
+        process.setArguments(["compile", path.replace("/", "\\"), location.replace("/", "\\"), str.split(os.path.basename(path), ".")[0]+".face", "0"])
         process.start()
         return process
     
