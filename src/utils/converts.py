@@ -108,6 +108,13 @@ class Convert:
                     eight_bit_img.save(fullPath)  
                 else:
                     rounded_img.save(fullPath)
+        
+    def reusedImage(self, projectPath, imagePath, newWidth, newHeight):
+        fullPath = os.path.join(os.path.dirname(projectPath), f"images/{imagePath}")
+        if os.path.exists(fullPath):
+            with Image.open(fullPath) as img:
+                return img.size == (newWidth, newHeight)
+        return False    
 
     def projectDataConversion(self, project):
         # Update DeviceType
@@ -161,15 +168,17 @@ class Convert:
             
             # Resize images
             if '@Bitmap' in widget:
-                self.resizeImage(project.dataPath, widget['@Bitmap'], int(widget['@Width']), int(widget['@Height']))
-                if int(widget['@Width']) == self.to_res_x and int(widget['@Height']) == self.to_res_y:
-                    self.cutBGcorner(project.dataPath, widget['@Bitmap'])
+                if not self.reusedImage(project.dataPath, widget['@Bitmap'], int(widget['@Width']), int(widget['@Height'])):
+                    self.resizeImage(project.dataPath, widget['@Bitmap'], int(widget['@Width']), int(widget['@Height']))
+                    if int(widget['@Width']) == self.to_res_x and int(widget['@Height']) == self.to_res_y:
+                        self.cutBGcorner(project.dataPath, widget['@Bitmap'])
 
             elif '@BitmapList' in widget:
                 for bitmap in widget['@BitmapList'].split('|'):
                     if bitmap == "":
                         break
-                    self.resizeImage(project.dataPath, bitmap.split(':')[1] if ':' in bitmap else bitmap, int(widget['@Width']), int(widget['@Height']))
+                    if not self.reusedImage(project.dataPath, bitmap.split(':')[1] if ':' in bitmap else bitmap, int(widget['@Width']), int(widget['@Height'])):
+                        self.resizeImage(project.dataPath, bitmap.split(':')[1] if ':' in bitmap else bitmap, int(widget['@Width']), int(widget['@Height']))
             
             elif widget['@Shape'] == '42':
                 widget['@Rotate_xc'] = round(int(widget['@Rotate_xc']) * self.mean)
