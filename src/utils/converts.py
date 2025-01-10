@@ -49,11 +49,32 @@ class Convert:
             self.upsampler = RealESRGANer(scale=4, model_path='models/realesr-general-wdn-x4v3.pth', model=model, tile=100, tile_pad=10, pre_pad=0, device=device)
 
 
-    def resizeImageU(self, projectPath, imagePath, newWidth, newHeight):
-        try:
-            fullPath = os.path.join(os.path.dirname(projectPath), f"images/{imagePath}")
-            if not os.path.exists(fullPath):
+    def resizeImageU(self, projectPath, imagePath, newWidth, newHeight):   #realesrgan
+        fullPath = os.path.join(os.path.dirname(projectPath), f"images/{imagePath}")
+        if not os.path.exists(fullPath):
+            return
+        img = cv2.imread(fullPath, cv2.IMREAD_UNCHANGED)
+        if img is None:
+            try:
+                pil_image = Image.open(fullPath).convert('RGBA')
+                img = cv2.cvtColor(np.array(pil_image), cv2.COLOR_RGBA2BGRA)
+            except Exception as e:
+                print(f"Error loading {imagePath} with Pillow: {str(e)}")
                 return
+        output, _ = self.upsampler.enhance(img)
+        output = cv2.resize(output, (newWidth, newHeight), interpolation=cv2.INTER_LANCZOS4)
+        output_rgba = cv2.cvtColor(output, cv2.COLOR_BGRA2RGBA)
+        if self.is_8bit:
+            pil_image = Image.fromarray(output_rgba, 'RGBA')
+            eight_bit_img = pil_image.convert("P", palette=Image.ADAPTIVE, colors=256)
+            eight_bit_img.save(fullPath)
+        else:
+            Image.fromarray(output_rgba).save(fullPath)
+
+
+    def resizeImageD(self, projectPath, imagePath, newWidth, newHeight):   #open-cv
+        fullPath = os.path.join(os.path.dirname(projectPath), f"images/{imagePath}")
+        if os.path.exists(fullPath):
             img = cv2.imread(fullPath, cv2.IMREAD_UNCHANGED)
             if img is None:
                 try:
@@ -62,35 +83,14 @@ class Convert:
                 except Exception as e:
                     print(f"Error loading {imagePath} with Pillow: {str(e)}")
                     return
-            img_height, img_width = img.shape[:2]
-            if img_width < 30 and img_height < 30:
-                final = cv2.resize(img, (newWidth, newHeight), interpolation=cv2.INTER_LANCZOS4)
-                final = cv2.cvtColor(final, cv2.COLOR_BGRA2RGBA)
-                Image.fromarray(final).save(fullPath)
-                return
+            final = cv2.resize(img, (newWidth, newHeight), interpolation=cv2.INTER_LANCZOS4)
+            final = cv2.cvtColor(final, cv2.COLOR_BGRA2RGBA)
+            if self.is_8bit:
+                pil_image = Image.fromarray(final, 'RGBA')
+                eight_bit_img = pil_image.convert("P", palette=Image.ADAPTIVE, colors=256)
+                eight_bit_img.save(fullPath)
             else:
-                output, _ = self.upsampler.enhance(img)
-                output_rgba = cv2.cvtColor(output, cv2.COLOR_BGRA2RGBA)
-                pil_image = Image.fromarray(output_rgba, 'RGBA')
-                resized_img = pil_image.resize((newWidth, newHeight), Image.LANCZOS)
-                if self.is_8bit:
-                    eight_bit_img = resized_img.convert("P", palette=Image.ADAPTIVE, colors=256)
-                    eight_bit_img.save(fullPath)
-                else:
-                    resized_img.save(fullPath)
-        except Exception as e:
-            print(f"Error processing {imagePath}: {str(e)}")  
-
-    def resizeImageD(self, projectPath, imagePath, newWidth, newHeight):   #pillow
-        fullPath = os.path.join(os.path.dirname(projectPath), f"images/{imagePath}")
-        if os.path.exists(fullPath):
-            with Image.open(fullPath) as img:
-                resized_img = img.resize((newWidth, newHeight), Image.LANCZOS)
-                if self.is_8bit:
-                    eight_bit_img = resized_img.convert("P", palette=Image.ADAPTIVE, colors=256)
-                    eight_bit_img.save(fullPath)  
-                else:
-                    resized_img.save(fullPath)
+                Image.fromarray(final).save(fullPath)
 
 
     def cutBGcorner(self, projectPath, imagePath):
