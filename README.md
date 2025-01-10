@@ -51,6 +51,10 @@
 
 - Ensure sufficient storage (~1.3GB) for installation and operation.
 - Always work with a copy of the project as the conversion process overwrites original images.
+- Compiler Path:
+`C:\Users\%USERPROFILE%\AppData\Local\Programs\Mi Create C\compiler`
+- DeviceInfo.db Path:
+`C:\Users\%USERPROFILE%\AppData\Local\Programs\Mi Create C\data`
 
 ---
 
