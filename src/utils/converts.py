@@ -62,7 +62,7 @@ class Convert:
                 print(f"Error loading {imagePath} with Pillow: {str(e)}")
                 return
         output, _ = self.upsampler.enhance(img)
-        output = cv2.resize(output, (newWidth, newHeight), interpolation=cv2.INTER_LANCZOS4)
+        output = cv2.resize(output, (newWidth, newHeight), interpolation=cv2.INTER_AREA)
         output_rgba = cv2.cvtColor(output, cv2.COLOR_BGRA2RGBA)
         if self.is_8bit:
             pil_image = Image.fromarray(output_rgba, 'RGBA')
@@ -83,7 +83,7 @@ class Convert:
                 except Exception as e:
                     print(f"Error loading {imagePath} with Pillow: {str(e)}")
                     return
-            final = cv2.resize(img, (newWidth, newHeight), interpolation=cv2.INTER_LANCZOS4)
+            final = cv2.resize(img, (newWidth, newHeight), interpolation=cv2.INTER_AREA)
             final = cv2.cvtColor(final, cv2.COLOR_BGRA2RGBA)
             if self.is_8bit:
                 pil_image = Image.fromarray(final, 'RGBA')
