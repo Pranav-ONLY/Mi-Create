@@ -2,6 +2,7 @@
 
 import os
 from PIL import Image, ImageDraw
+import imagequant
 import torch
 import cv2
 import numpy as np
@@ -48,6 +49,13 @@ class Convert:
             device = 'cuda' if torch.cuda.is_available() else 'cpu'
             self.upsampler = RealESRGANer(scale=4, model_path='models/realesr-general-wdn-x4v3.pth', model=model, tile=100, tile_pad=10, pre_pad=0, device=device)
 
+    def to_8bit(self, img_path):
+        if not os.path.exists(img_path):
+            return
+        img = Image.open(img_path)
+        quantized_img = imagequant.quantize_pil_image(img, dithering_level=1, max_colors=256, max_quality=100, min_quality=0)
+        quantized_img.save(img_path)
+
 
     def resizeImageU(self, projectPath, imagePath, newWidth, newHeight):   #realesrgan
         fullPath = os.path.join(os.path.dirname(projectPath), f"images/{imagePath}")
@@ -64,12 +72,9 @@ class Convert:
         output, _ = self.upsampler.enhance(img)
         output = cv2.resize(output, (newWidth, newHeight), interpolation=cv2.INTER_AREA)
         output_rgba = cv2.cvtColor(output, cv2.COLOR_BGRA2RGBA)
+        Image.fromarray(output_rgba).save(fullPath)
         if self.is_8bit:
-            pil_image = Image.fromarray(output_rgba, 'RGBA')
-            eight_bit_img = pil_image.convert("P", palette=Image.ADAPTIVE, colors=256)
-            eight_bit_img.save(fullPath)
-        else:
-            Image.fromarray(output_rgba).save(fullPath)
+            self.to_8bit(fullPath)
 
 
     def resizeImageD(self, projectPath, imagePath, newWidth, newHeight):   #open-cv
@@ -85,12 +90,10 @@ class Convert:
                     return
             final = cv2.resize(img, (newWidth, newHeight), interpolation=cv2.INTER_AREA)
             final = cv2.cvtColor(final, cv2.COLOR_BGRA2RGBA)
+            Image.fromarray(final).save(fullPath)
             if self.is_8bit:
-                pil_image = Image.fromarray(final, 'RGBA')
-                eight_bit_img = pil_image.convert("P", palette=Image.ADAPTIVE, colors=256)
-                eight_bit_img.save(fullPath)
-            else:
-                Image.fromarray(final).save(fullPath)
+                self.to_8bit(fullPath)
+                
 
 
     def cutBGcorner(self, projectPath, imagePath):
@@ -103,11 +106,11 @@ class Convert:
                 mask = large_mask.resize(img.size, Image.LANCZOS)
                 rounded_img = Image.new("RGBA", img.size)
                 rounded_img.paste(img, mask=mask)
+                rounded_img.save(fullPath)
                 if self.is_8bit:
-                    eight_bit_img = rounded_img.convert("P", palette=Image.ADAPTIVE, colors=256)
-                    eight_bit_img.save(fullPath)  
-                else:
-                    rounded_img.save(fullPath)
+                    self.to_8bit(fullPath)
+                    
+
         
     def reusedImage(self, projectPath, imagePath, newWidth, newHeight):
         fullPath = os.path.join(os.path.dirname(projectPath), f"images/{imagePath}")
