@@ -386,7 +386,11 @@ class PropertiesWidget(QWidget):
                             if len(imageList) > index:
                                 image = imageList[index]
                                 if image != None and len(image) > 1 and isinstance(image, list):
-                                    indexInput.setValue(int(image[0])) 
+                                    try:
+                                        indexInput.setValue(int(image[0]))
+                                    except ValueError:
+                                        print(f"ValueError index is not integer") 
+                                        indexInput.setValue(0)
                                     imageInput.setCurrentText(image[1])             
                                 imageInput.currentTextChanged.connect(lambda event, indexInput=self.imageCategories[index][2], imageInput=self.imageCategories[index][1], index=index: imagesChanged(indexInput.text(), imageInput.currentText(), index))
                                 indexInput.textChanged.connect(lambda text, imageInput=self.imageCategories[index][1], index=index: imagesChanged(text, imageInput.currentText(), index))

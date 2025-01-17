@@ -389,7 +389,11 @@ class Canvas(QGraphicsView):
         # displayImage is a list with 2 values, image index & image
 
         if bitmapList != []:
-            values = [int(x[0]) for x in bitmapList]
+            try:
+                values = [int(x[0]) for x in bitmapList]
+            except ValueError:
+                print(f"ValueError in {name} Index is not a Integer")
+                values = [str(x[0]).strip() for x in bitmapList]
 
             # Get default image if available
             if defaultValue in values:
