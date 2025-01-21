@@ -5,9 +5,8 @@ xmltodict
 requests
 
 pillow
-torch
+imagequant
 opencv-python
-torchvision
-basicsr
+onnxruntime
 
 pywin32; sys_platform == "win32"
