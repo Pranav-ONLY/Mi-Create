@@ -298,7 +298,7 @@ class WatchData:
     def getCompilerVersion(self):
         settings = QSettings("Mi Create", "Workspace")
         if settings.value("compilerVersion") is None:
-            settings.setValue("compilerVersion", "m0tral-v4.16")
+            settings.setValue("compilerVersion", "m0tral-v4.18")
         return settings.value("compilerVersion")
 
     def getWatchModel(self, id):
