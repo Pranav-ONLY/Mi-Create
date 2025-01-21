@@ -3,19 +3,14 @@
 import os
 from PIL import Image, ImageDraw
 import imagequant
-import torch
 import cv2
 import numpy as np
-from basicsr.archs.srvgg_arch import SRVGGNetCompact
-from realesrgan import RealESRGANer
+import onnxruntime as ort
 
-# from ..realesrgan import RealESRGANer
-
-# create a class and use it that way 
 class Convert:
     def __init__(self, coreDialog):
         self.dialog = coreDialog
-        self.upsampler = None
+        self.session = None
         self.from_model = self.dialog.fromModelComboBox.currentText()
         self.to_model = self.dialog.toModelComboBox.currentText()
         if self.from_model == self.to_model:
@@ -44,10 +39,9 @@ class Convert:
         print(self.x_factor, self.y_factor, self.dtF, self.dtT)
 
     def load_up_model(self):
-        if self.upsampler is None:
-            model = SRVGGNetCompact(num_in_ch=3, num_out_ch=3, num_feat=64, num_conv=32, upscale=4, act_type='prelu')
-            device = 'cuda' if torch.cuda.is_available() else 'cpu'
-            self.upsampler = RealESRGANer(scale=4, model_path='models/realesr-general-wdn-x4v3.pth', model=model, tile=100, tile_pad=10, pre_pad=0, device=device)
+        if self.session is None:
+            onnx_model_path = "models/realesrgan_dynamic.onnx"
+            self.session = ort.InferenceSession(onnx_model_path)   
 
     def to_8bit(self, img_path):
         if not os.path.exists(img_path):
@@ -69,10 +63,33 @@ class Convert:
             except Exception as e:
                 print(f"Error loading {imagePath} with Pillow: {str(e)}")
                 return
-        output, _ = self.upsampler.enhance(img)
-        output = cv2.resize(output, (newWidth, newHeight), interpolation=cv2.INTER_AREA)
-        output_rgba = cv2.cvtColor(output, cv2.COLOR_BGRA2RGBA)
-        Image.fromarray(output_rgba).save(fullPath)
+        has_alpha = img.shape[2] == 4
+        if has_alpha:
+            bgr = img[:, :, :3]  # Extract BGR channels
+            alpha = img[:, :, 3]
+        else:
+            bgr = img
+            alpha = None
+        rgb = cv2.cvtColor(bgr, cv2.COLOR_BGR2RGB)
+        input_tensor = rgb.astype(np.float32) / 255.0
+        input_tensor = np.transpose(input_tensor, (2, 0, 1))  # HWC to CHW
+        input_tensor = np.expand_dims(input_tensor, axis=0) 
+
+        outputs = self.session.run(None, {'input': input_tensor})
+
+        output_tensor = outputs[0][0]  # Remove batch dimension
+        output_tensor = np.transpose(output_tensor, (1, 2, 0))  # CHW to HWC
+        output_tensor = np.clip(output_tensor * 255.0, 0, 255).astype(np.uint8)
+
+        output = cv2.resize(output_tensor, (newWidth, newHeight), interpolation=cv2.INTER_AREA)
+        output_bgr = cv2.cvtColor(output, cv2.COLOR_RGB2BGR)
+
+        if has_alpha:
+            alpha_resized = cv2.resize(alpha, (newWidth, newHeight), interpolation=cv2.INTER_LANCZOS4)
+            output_bgra = cv2.merge((output_bgr, alpha_resized))
+            cv2.imwrite(fullPath, output_bgra)
+        else:
+            cv2.imwrite(fullPath, output_bgr)
         if self.is_8bit:
             self.to_8bit(fullPath)
 
