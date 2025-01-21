@@ -154,14 +154,7 @@ class Convert:
                     mainPath = os.path.join(os.path.dirname(project.dataPath), f"images/{firstImagePath}")
                     if os.path.exists(mainPath):
                         with Image.open(mainPath) as img:
-                            if img.width == int(widget['@Width']):
-                                widget['@Width'] = str(round(float(widget['@Width']) * self.x_factor))
-                            elif img.width == round(float(widget['@Width']) * self.x_factor):
-                                widget['@Width'] = str(round(float(widget['@Width']) * self.x_factor))
-                            elif int(widget['@Spacing']) == 0:
-                                widget['@Width'] = str(round(float(int(widget['@Width'])/int(widget['@Digits'])) * self.x_factor))
-                            else:
-                                widget['@Width'] = str(round(float( int(widget['@Width']) + int(widget['@Digits']) + int(widget['@Spacing']) ) / int(widget['@Digits'])  * self.x_factor))
+                            widget['@Width'] = str(round(img.width * self.x_factor))
                 except FileNotFoundError:
                     print(f"Image not found: {firstImagePath}")
             else:
