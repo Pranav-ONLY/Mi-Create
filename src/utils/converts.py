@@ -166,14 +166,12 @@ class Convert:
             self.dialog.progressBar.setValue(i + 1) # for small progressbar
             # Update Width and Height
             if '@Digits' in widget and (int(widget['@Digits'])>1):
-                try:
-                    firstImagePath = widget['@BitmapList'].split('|')[0]
-                    mainPath = os.path.join(os.path.dirname(project.dataPath), f"images/{firstImagePath}")
-                    if os.path.exists(mainPath):
-                        with Image.open(mainPath) as img:
-                            widget['@Width'] = str(round(img.width * self.x_factor))
-                except FileNotFoundError:
-                    print(f"Image not found: {firstImagePath}")
+                increase_width_by_spacing = (int(widget['@Digits'])-1) * int(widget['@Spacing'])
+                if increase_width_by_spacing > 0:
+                     widget['@Width'] = round(((int(widget['@Width']) - abs(increase_width_by_spacing)) / int(widget['@Digits']) * self.x_factor))
+                else:
+                     widget['@Width'] = round(((int(widget['@Width']) + abs(increase_width_by_spacing)) / int(widget['@Digits']) * self.x_factor))
+
             else:
                 widget['@Width'] = str(round(float(widget['@Width']) * self.x_factor))
 

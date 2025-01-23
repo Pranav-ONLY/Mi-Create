@@ -8,5 +8,6 @@ pillow
 imagequant
 opencv-python
 onnxruntime
+numpy
 
 pywin32; sys_platform == "win32"
