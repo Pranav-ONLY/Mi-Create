@@ -49,7 +49,7 @@
         Redmi Watch 4,
         Redmi Watch 5
 
-- Ensure sufficient storage (~1.3GB) for installation and operation.
+- Ensure sufficient storage (~310MB) for installation and operation.
 - Always work with a copy of the project as the conversion process overwrites original images.
 - Compiler Path:
 `C:\Users\%USERPROFILE%\AppData\Local\Programs\Mi Create C\compiler`
