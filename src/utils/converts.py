@@ -167,10 +167,19 @@ class Convert:
             # Update Width and Height
             if '@Digits' in widget and (int(widget['@Digits'])>1):
                 increase_width_by_spacing = (int(widget['@Digits'])-1) * int(widget['@Spacing'])
-                if increase_width_by_spacing > 0:
-                     widget['@Width'] = round(((int(widget['@Width']) - abs(increase_width_by_spacing)) / int(widget['@Digits']) * self.x_factor))
-                else:
-                     widget['@Width'] = round(((int(widget['@Width']) + abs(increase_width_by_spacing)) / int(widget['@Digits']) * self.x_factor))
+                firstImagePath = widget['@BitmapList'].split('|')[0]
+                mainPath = os.path.join(self.projectImagepath, firstImagePath)
+                if os.path.exists(mainPath):
+                    with Image.open(mainPath) as img:
+                        if img.width == int(widget['@Width']):
+                            widget['@Width'] = str(round(img.width * self.x_factor))
+                        elif img.width == round(float(widget['@Width']) * self.x_factor):
+                                widget['@Width'] = str(round(float(widget['@Width']) * self.x_factor))
+                        else:
+                            if increase_width_by_spacing > 0:
+                                widget['@Width'] = round(((int(widget['@Width']) - abs(increase_width_by_spacing)) / int(widget['@Digits']) * self.x_factor))
+                            else:
+                                widget['@Width'] = round(((int(widget['@Width']) + abs(increase_width_by_spacing)) / int(widget['@Digits']) * self.x_factor))
 
             else:
                 widget['@Width'] = str(round(float(widget['@Width']) * self.x_factor))
