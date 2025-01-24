@@ -168,7 +168,7 @@ class Convert:
             if '@Digits' in widget and (int(widget['@Digits'])>1):
                 increase_width_by_spacing = (int(widget['@Digits'])-1) * int(widget['@Spacing'])
                 firstImagePath = widget['@BitmapList'].split('|')[0]
-                mainPath = os.path.join(self.projectImagepath, firstImagePath)
+                mainPath = os.path.join(os.path.dirname(project.dataPath), f"images/{firstImagePath}")
                 if os.path.exists(mainPath):
                     with Image.open(mainPath) as img:
                         if img.width == int(widget['@Width']):

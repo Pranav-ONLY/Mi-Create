@@ -73,7 +73,7 @@ workspaceSettings = QSettings("Mi Create", "Workspace")
     
 _ = gettext.gettext
 
-programVersion = 'v1.0.7'
+programVersion = 'v1.0.9'
 
 class WatchfaceEditor(QMainWindow):
     updateFound = pyqtSignal(str)
